@@ -1,0 +1,22 @@
+{
+  "engine": "naive",
+  "model_id": "Qwen/Qwen2.5-0.5B-Instruct",
+  "commit": "uncommitted",
+  "gpu": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+  "python": "3.12.7",
+  "num_prompts": 5,
+  "max_new_tokens": 64,
+  "workload": "fixed prompt list, sequential, one request at a time (no concurrency at M1)",
+  "throughput_tokens_per_sec": 16.152143337431802,
+  "latency_p50_s": 3.9279888999999457,
+  "latency_p99_s": 4.271477299999788,
+  "latency_per_request_s": [
+    4.271477299999788,
+    3.7988016999997853,
+    3.819024499999614,
+    3.9279888999999457,
+    3.9942997999996805
+  ],
+  "total_tokens": 320,
+  "wall_time_s": 19.811612199999217
+}

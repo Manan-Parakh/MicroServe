@@ -1,0 +1,35 @@
+# Same build/dependency noise as .gitignore — no reason to load these
+# into context.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Model weights / caches — large binaries, never useful as text context.
+models/
+checkpoints/
+*.safetensors
+*.bin
+*.pt
+*.ckpt
+.cache/
+huggingface_cache/
+
+# Source planning PDFs — already distilled into docs/roadmap.md, which is
+# the file to read. Kept in the repo for provenance, not for re-reading.
+docs/reference/*.pdf
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

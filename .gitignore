@@ -1,0 +1,59 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Dependency managers ---
+# uv / pip / poetry all keep their lockfiles tracked (do NOT ignore
+# uv.lock / poetry.lock / requirements*.txt) — only local caches below.
+.uv-cache/
+
+# --- Testing / linting ---
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Models, datasets, and other large local artifacts ---
+# Never commit model weights or downloaded datasets — they're pulled at
+# runtime via the HF cache, not checked in.
+models/
+checkpoints/
+*.safetensors
+*.bin
+*.pt
+*.ckpt
+.cache/
+huggingface_cache/
+
+# --- Benchmark scratch output ---
+# The curated numbers that get quoted live in docs/benchmarks/ and ARE
+# tracked; this is only for throwaway local runs before they're filed there.
+bench/scratch/
+*.prof
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs ---
+*.log
