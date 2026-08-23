@@ -6,7 +6,7 @@ one systems/GPU/inference concept — problem, mechanics, usage, MicroServe
 placement, gotchas, interview questions. Written via the `/add-bites` command
 (`.claude/commands/add-bites.md`).
 
-**Progress:** `0 / 1` (0%)
+**Progress:** `0 / 2` (0%)
 `[----------------------------------------]`
 
 Counts and bars above are derived — never hand-edit them. Run
@@ -25,7 +25,9 @@ Counts and bars above are derived — never hand-edit them. Run
 
 ## Concept Map
 
-### 🖥️ gpu-and-hardware/ — GPU compute & memory internals · `0 / 0`
+### 🖥️ gpu-and-hardware/ — GPU compute & memory internals · `0 / 1`
+
+- [ ] **[floating-point-determinism.md](./gpu-and-hardware/floating-point-determinism.md)** — why a mathematically-equivalent recomputation (different cache shape, different batching, fused vs. explicit attention) can flip a near-tied greedy-decode token, and why CPU+eager was the fix here, not GPU-vs-CPU per se
 
 ### 🧠 os-and-memory/ — virtual memory, paging, OS primitives · `0 / 0`
 
@@ -43,4 +45,6 @@ Counts and bars above are derived — never hand-edit them. Run
 
 - **testing-and-correctness/** ◦ **Differential testing** — comparing two independent implementations instead of one implementation against itself
 - **testing-and-correctness/** ◦ **Property-based testing (e.g. Hypothesis)** — generating many random inputs to check an invariant holds; a natural fit for allocator/block-table logic
-- **gpu-and-hardware/** ◦ **Floating-point determinism / reduction order on GPU** — why the same matmul can produce different low-order bits depending on batch size or kernel choice (TF32, cuBLAS algorithm selection)
+- **gpu-and-hardware/** ◦ **Mixed-precision accumulation strategies** — how bf16/fp16 kernels choose to accumulate in fp32 vs. round at every step, and why that changes how often near-ties occur
+- **gpu-and-hardware/** ◦ **cuBLAS/cuDNN algorithm heuristics** — the broader family behind this project's GEMM shape-selection finding; relevant for anyone tuning GPU kernels for throughput
+- **gpu-and-hardware/** ◦ **Flash Attention's tiling strategy** — a fused kernel built around a specific, shape-dependent accumulation order; directly related to why SDPA and eager attention diverged here

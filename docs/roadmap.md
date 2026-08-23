@@ -150,7 +150,7 @@ commit lands so the number carries real provenance (see
 
 ---
 
-## Milestone 2 — Continuous batching  ⬜
+## Milestone 2 — Continuous batching  ✅
 
 *The scheduling half of what makes vLLM fast — isolated here, deliberately,
 before memory management enters the picture in Milestone 3.*
@@ -170,24 +170,30 @@ before memory management enters the picture in Milestone 3.*
   `anyscale.com/blog/continuous-batching-llm-inference`
 
 **Build:**
-- ⬜ A real `Sequence` with waiting/running/finished state.
-- ⬜ A `Scheduler` implementing iteration-level scheduling — evicting
+- ✅ A real `Sequence` with waiting/running/finished state.
+- ✅ A `Scheduler` implementing iteration-level scheduling — evicting
   finished sequences and admitting new ones every decode step, not every
   full batch.
-- ⬜ Prefill (new sequences) and decode (running sequences) run as two
+- ✅ Prefill (new sequences) and decode (running sequences) run as two
   separate forward calls, not fused — note this simplification in the
   README.
-- ⬜ Each sequence still reserves a simple contiguous KV buffer;
-  fragmentation is expected and correct here.
+- ✅ Each sequence still reserves a simple contiguous KV buffer;
+  fragmentation is expected and correct here. (Concretely: `StaticCache`,
+  rebuilt on membership change per ADR-0007 — no per-sequence buffer object,
+  see ADR-0007's Consequences.)
 
 **Guardrail:** Do not implement paged or block-based memory yet — accepting
 fragmentation here is correct, not lazy; it isolates the scheduling problem
 so Milestone 3 can isolate the memory problem. Do not attempt to fuse
 prefill and decode into one kernel call.
 
-**Definition of done:** ⬜ Correctness test still passes. ⬜ A benchmark
-demonstrating continuous batching beating static batching on throughput and
-GPU idle time under a workload with variable output lengths.
+**Definition of done:** ✅ Correctness test still passes (22/22,
+`uv run pytest tests/ -v`). ✅ A benchmark demonstrating continuous batching
+beating static batching on throughput and GPU idle time under a workload
+with variable output lengths — see
+`docs/benchmarks/2026-08-23_09-18-14-m2-continuous-vs-static-vs-naive/summary.md`
+(continuous: 47.4 tok/s, 0% wasted compute; static: 27.2 tok/s, 46.3% wasted
+compute).
 
 ---
 
