@@ -27,7 +27,7 @@ in `claude.md` — this file doesn't repeat them.
 | ✅ 0 | Setup | Repo, tiny model, correctness harness | Nothing new |
 | ✅ 1 | Naive baseline | One-request-at-a-time engine | Nothing new |
 | ⬜ 2 | Continuous batching | Scheduler, iteration-level scheduling | Phase 2 (prefill/decode), Orca paper |
-| ⬜ 3 | Paged KV cache | Block allocator, block table, gather-then-attend | Phase 1 (GPU memory), Part A1 (paging), PagedAttention paper |
+| ✅ 3 | Paged KV cache | Block allocator, block table, gather-then-attend | Phase 1 (GPU memory), Part A1 (paging), PagedAttention paper |
 | ⬜ 4 | Quantization | 4-bit loading, re-benchmark | Phase 3 quantization section only |
 | ⬜ 5 | Benchmark suite | Poisson workload, 4-way comparison chart | Phase 6 TTFT/TPOT framing only |
 | ⬜ 6 | Prefix sharing (stretch) | Reference-counted blocks, copy-on-write | PagedAttention §4 (re-read) |
@@ -197,7 +197,7 @@ compute).
 
 ---
 
-## Milestone 3 — Paged KV cache · THE BIG ONE  ⬜
+## Milestone 3 — Paged KV cache · THE BIG ONE  ✅
 
 *Budget the most time here. This is the one line on the resume almost nobody
 else building a portfolio project has actually implemented.*
@@ -223,15 +223,15 @@ else building a portfolio project has actually implemented.*
   (This is Roadmap Two's Phase 4, repurposed rather than skipped.)
 
 **Build:**
-- ⬜ `BlockAllocator` managing one pre-allocated KV tensor pool, shape
+- ✅ `BlockAllocator` managing one pre-allocated KV tensor pool, shape
   `[num_blocks, 2, num_layers, num_heads, block_size, head_dim]`, with a
   free-block stack and reference counts.
-- ⬜ Each `Sequence` gets a `block_table` mapping logical position → physical
+- ✅ Each `Sequence` gets a `block_table` mapping logical position → physical
   block id.
-- ⬜ At attention time: gather the sequence's scattered blocks into a
+- ✅ At attention time: gather the sequence's scattered blocks into a
   contiguous scratch tensor, then call `scaled_dot_product_attention` on it
   — no custom kernel.
-- ⬜ Block size as a tunable constant, starting at 16 tokens/block (vLLM's
+- ✅ Block size as a tunable constant, starting at 16 tokens/block (vLLM's
   default).
 
 **Guardrail — the one most worth reading twice:** Do **not** write a custom
@@ -241,9 +241,19 @@ the same idea without kernel authorship, which is a separate, much larger
 project. Do **not** go into Tensor Core instruction-level behavior,
 PTX/SASS, warp-level programming, or occupancy tuning.
 
-**Definition of done:** ⬜ Correctness test passes on the paged code path.
-⬜ A memory-utilization benchmark showing higher achievable concurrent batch
+**Definition of done:** ✅ Correctness test passes on the paged code path.
+✅ A memory-utilization benchmark showing higher achievable concurrent batch
 size at the same VRAM budget, contiguous allocation vs. paged.
+
+**Done 2026-09-03.** 122 tests green. **4.92x concurrent sequences at equal
+VRAM** (26 -> 128 at a 64 MiB budget), reserved-slot occupancy **42% -> 90%**
+-- the paper's ~40%-to->90% figure, computed for our own engines. Numbers in
+`docs/benchmarks/2026-09-03_15-57-52-m3-paged-vs-contiguous/`; methodology in
+ADR-0014; preemption policy in ADR-0012; structure in ADR-0013. Run
+`python -m engine.paged_engine` to watch the mechanism work.
+
+*Theory boxes above are deliberately left for you to tick -- a theory box is a
+record of having read the thing, and I can't tick that on your behalf.*
 
 ---
 

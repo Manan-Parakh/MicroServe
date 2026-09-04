@@ -32,3 +32,27 @@ Latency is reported as p50 and p99, never a bare mean.
 The four-way comparison (naive → continuous batching → paged → quantized) at
 increasing request rate is the headline artifact of Milestone 5. It belongs
 here, alongside the exact numbers behind it.
+
+
+## Runs
+
+| date | milestone | what it measures |
+|---|---|---|
+| 2026-08-19 / 08-21 | M1 | naive baseline, one request at a time |
+| 2026-08-23 | M2 | continuous vs. static vs. naive batching |
+| 2026-09-03 | M3 | **paged vs. contiguous KV cache at equal VRAM** |
+
+The M3 run (`2026-09-03_15-57-52-m3-paged-vs-contiguous/`) is produced by
+`python -m bench.paged_benchmark --validate`, not by `bench/benchmark.py`.
+It carries two workloads:
+
+- a **budget sweep** on M2's six-request workload, so the numbers compose with
+  the recorded M2 run;
+- a **validation point** (64 MiB, 128 requests, long-tailed lengths) large
+  enough for both engines to saturate, which is where the milestone's claim is
+  actually demonstrated: **4.92x concurrent sequences at equal VRAM**, with
+  reserved-slot occupancy of 42% (contiguous) vs. 90% (paged).
+
+Read the run's own `README.md` before quoting any of it — the TTFT result
+belongs to the absence of ADR-0007's resync, not to paging, and the two must
+not be conflated.

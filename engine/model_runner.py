@@ -121,3 +121,50 @@ class ModelRunner:
             )
         next_token_ids = out.logits[:, -1, :].argmax(dim=-1).tolist()
         return next_token_ids, attention_mask
+
+    # --- paged path (M3 Phase 3) ---------------------------------------------
+    #
+    # Separate methods rather than flags on the existing two: M2's engine must
+    # stay exactly as benchmarked so the M5 four-way chart compares four real
+    # implementations, not one implementation with a branch in it.
+
+    def _right_pad(self, token_id_lists: list[list[int]]) -> torch.Tensor:
+        """Right-pad, the mirror of `_left_pad` and the paged path's convention.
+
+        A paged sequence's KV starts at logical position 0 no matter how the
+        query batch is padded, so left-padding would put the block table and
+        the causal mask at odds. The cost is that `logits[:, -1, :]` no longer
+        reads every row's prediction -- see `PagedBatch.last_logit_index`.
+        """
+        max_len = max(len(ids) for ids in token_id_lists)
+        pad_id = self.tokenizer.eos_token_id
+        input_ids = torch.full(
+            (len(token_id_lists), max_len), pad_id, dtype=torch.long, device=self.device
+        )
+        for row, ids in enumerate(token_id_lists):
+            input_ids[row, : len(ids)] = torch.tensor(ids, dtype=torch.long, device=self.device)
+        return input_ids
+
+    def _paged_forward(self, cache, batch, input_ids: torch.Tensor) -> list[int]:
+        """One paged forward pass; returns each row's greedy next-token id."""
+        cache.set_batch(batch)
+        with torch.no_grad():
+            out = self.model(
+                input_ids=input_ids,
+                attention_mask=batch.attention_mask(),
+                position_ids=batch.position_ids(input_ids.shape[1]),
+                past_key_values=cache,
+                use_cache=True,
+            )
+        rows = torch.arange(input_ids.shape[0], device=self.device)
+        return out.logits[rows, batch.last_logit_index(), :].argmax(dim=-1).tolist()
+
+    def paged_prefill(self, cache, batch, token_id_lists: list[list[int]]) -> list[int]:
+        """Batched prefill through the pool. `batch.past_lens` is 0 for fresh
+        admissions, non-zero when a preempted sequence is recomputed (Phase 4)."""
+        return self._paged_forward(cache, batch, self._right_pad(token_id_lists))
+
+    def paged_decode_step(self, cache, batch, last_token_ids: list[int]) -> list[int]:
+        """One token per row. `q_len == 1` everywhere, so no padding is needed."""
+        input_ids = torch.tensor(last_token_ids, dtype=torch.long, device=self.device).unsqueeze(-1)
+        return self._paged_forward(cache, batch, input_ids)
